@@ -69,6 +69,57 @@
     .negative {
       color: red;
     }
+    .shipping-input {
+      font-size: 1rem;
+      padding: 0.3rem 0.5rem;
+      width: 80px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    .shipping-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    .shipping-name {
+      font-weight: bold;
+      min-width: 120px;
+    }
+    .collapsible {
+      cursor: pointer;
+      padding: 15px 0;
+      border: none;
+      background: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #93c01f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .collapsible:hover {
+      color: #7aa01a;
+    }
+    .collapsible-arrow {
+      transition: transform 0.3s ease;
+      font-size: 1rem;
+    }
+    .collapsible-arrow.open {
+      transform: rotate(180deg);
+    }
+    .content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .content.open {
+      max-height: 1000px;
+    }
   </style>
 </head>
 <body>
@@ -99,16 +150,23 @@
   </div>
 
   <div class="card">
-    <h2>Einstellungen</h2>
-    <label>Provision bis Grenze: <input type="number" id="prov1" value="6.5" />%</label><br/>
-    <label>Provision über Grenze: <input type="number" id="prov2" value="2" />%</label><br/>
-    <label>Grenzbetrag: <input type="number" id="provLimit" value="400" />€</label><br/>
-    <label>Anzeigengebühr: <input type="number" id="adfee" value="2" />%</label><br/>
-    <p>Versandkosten können direkt im Code angepasst werden.</p>
+    <button class="collapsible" onclick="toggleSettings()">
+      <span>Einstellungen</span>
+      <span class="collapsible-arrow" id="settings-arrow">▼</span>
+    </button>
+    <div class="content" id="settings-content">
+      <label>Provision bis Grenze: <input type="number" id="prov1" value="6.5" />%</label><br/>
+      <label>Provision über Grenze: <input type="number" id="prov2" value="2" />%</label><br/>
+      <label>Grenzbetrag: <input type="number" id="provLimit" value="400" />€</label><br/>
+      <label>Anzeigengebühr: <input type="number" id="adfee" value="2" />%</label><br/>
+      
+      <h3>Versandtarife</h3>
+      <div id="shipping-settings"></div>
+    </div>
   </div>
 
   <script>
-    const shippingOptions = [
+    let shippingOptions = [
       { name: "Kein Versand", price: 0 },
       { name: "GEL HP", price: 55.85 },
       { name: "GEL 90", price: 79.56 },
@@ -129,19 +187,55 @@
 
     let selectedShipping = null;
 
-    const container = document.getElementById("shipping-options");
-    shippingOptions.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.textContent = `${opt.name}`;
-      btn.className = "button unselected";
-      btn.onclick = () => {
-        [...container.children].forEach(child => child.className = "button unselected");
-        btn.className = "button selected";
-        selectedShipping = opt;
-        updateCalculations();
-      };
-      container.appendChild(btn);
-    });
+    function createShippingSettings() {
+      const container = document.getElementById("shipping-settings");
+      container.innerHTML = '';
+      
+      shippingOptions.forEach((opt, index) => {
+        const div = document.createElement("div");
+        div.className = "shipping-row";
+        
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "shipping-name";
+        nameSpan.textContent = opt.name;
+        
+        const priceInput = document.createElement("input");
+        priceInput.type = "number";
+        priceInput.className = "shipping-input";
+        priceInput.value = opt.price;
+        priceInput.step = "0.01";
+        priceInput.addEventListener("input", () => {
+          shippingOptions[index].price = parseFloat(priceInput.value) || 0;
+          updateCalculations();
+        });
+        
+        const euroSpan = document.createElement("span");
+        euroSpan.textContent = " €";
+        
+        div.appendChild(nameSpan);
+        div.appendChild(priceInput);
+        div.appendChild(euroSpan);
+        container.appendChild(div);
+      });
+    }
+
+    function createShippingButtons() {
+      const container = document.getElementById("shipping-options");
+      container.innerHTML = '';
+      
+      shippingOptions.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = `${opt.name}`;
+        btn.className = "button unselected";
+        btn.onclick = () => {
+          [...container.children].forEach(child => child.className = "button unselected");
+          btn.className = "button selected";
+          selectedShipping = opt;
+          updateCalculations();
+        };
+        container.appendChild(btn);
+      });
+    }
 
     document.getElementById("netto").addEventListener("input", updateCalculations);
     document.getElementById("brutto").addEventListener("input", updateCalculations);
@@ -183,7 +277,8 @@
       document.getElementById("shipping-cost").textContent = versand.toFixed(2);
       document.getElementById("commission").textContent = provision.toFixed(2);
     }
-      const provisionCategories = [
+
+    const provisionCategories = [
       { name: "Haushaltsgeräte", prov1: 6.5, prov2: 2, limit: 400 },
       { name: "Haushaltsgeräte klein", prov1: 6.5, prov2: 2, limit: 400 },
       { name: "Heimwerker", prov1: 12, prov2: 2, limit: 200 },
@@ -207,6 +302,23 @@
       };
       provContainer.appendChild(btn);
     });
+
+    // Initialize
+    createShippingButtons();
+    createShippingSettings();
+
+    function toggleSettings() {
+      const content = document.getElementById("settings-content");
+      const arrow = document.getElementById("settings-arrow");
+      
+      if (content.classList.contains("open")) {
+        content.classList.remove("open");
+        arrow.classList.remove("open");
+      } else {
+        content.classList.add("open");
+        arrow.classList.add("open");
+      }
+    }
   </script>
 <script>
   if ('serviceWorker' in navigator) {
