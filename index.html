@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#93c01f" />
+  <title>Gebührenrechner</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #93c01f;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    .button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      margin: 4px;
+      cursor: pointer;
+    }
+    .selected {
+      background-color: #93c01f;
+      color: white;
+    }
+    .unselected {
+      background-color: white;
+      border: 1px solid #ccc;
+      color: #333;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    input[type="number"] {
+      font-size: 2rem;
+      padding: 0.6rem 1rem;
+      width: 180px;
+      border: 2px solid #93c01f;
+      border-radius: 12px;
+      background-color: #fdfdfd;
+    }
+    .result {
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+    .positive {
+      color: green;
+    }
+    .negative {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gebührenrechner</h1>
+
+  <div class="card">
+    <div class="row">
+      <label>EK (Netto): <input type="number" id="netto" /></label>
+      <label>VK (Brutto): <input type="number" id="brutto" /></label>
+      <div class="result">Gewinn: <span id="profit" class="positive">0.00</span> €</div>
+      <div class="result">mit Anzeige: <span id="profit-ads" class="positive">0.00</span> €</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Versandoptionen</h2>
+    <div class="grid" id="shipping-options"></div>
+  </div>
+
+  <div class="card">
+    <p><strong>Gesamt-Versandkosten:</strong> <span id="shipping-cost">0.00</span> €</p>
+    <p><strong>Provision:</strong> <span id="commission">0.00</span> €</p>
+  </div>
+
+  <div class="card">
+    <h2>Provisionskategorie</h2>
+    <div class="grid" id="provision-buttons"></div>
+  </div>
+
+  <div class="card">
+    <h2>Einstellungen</h2>
+    <label>Provision bis Grenze: <input type="number" id="prov1" value="6.5" />%</label><br/>
+    <label>Provision über Grenze: <input type="number" id="prov2" value="2" />%</label><br/>
+    <label>Grenzbetrag: <input type="number" id="provLimit" value="400" />€</label><br/>
+    <label>Anzeigengebühr: <input type="number" id="adfee" value="2" />%</label><br/>
+    <p>Versandkosten können direkt im Code angepasst werden.</p>
+  </div>
+
+  <script>
+    const shippingOptions = [
+      { name: "Kein Versand", price: 0 },
+      { name: "GEL HP", price: 55.85 },
+      { name: "GEL 90", price: 79.56 },
+      { name: "GEL 80", price: 74.28 },
+      { name: "GEL 70", price: 69.01 },
+      { name: "GEL 60", price: 62.89 },
+      { name: "GEL 50", price: 56.01 },
+      { name: "GEL 40", price: 47.99 },
+      { name: "GEL 30", price: 44.78 },
+      { name: "GEL 20", price: 37.60 },
+      { name: "GEL 10", price: 30.72 },
+      { name: "Wüst Karton", price: 151.08 },
+      { name: "DHL HP", price: 58.51 },
+      { name: "DHL XP", price: 76.68 },
+      { name: "DHL KT", price: 55.54 },
+      { name: "DHL Paket", price: 5.32 },
+    ];
+
+    let selectedShipping = null;
+
+    const container = document.getElementById("shipping-options");
+    shippingOptions.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.textContent = `${opt.name}`;
+      btn.className = "button unselected";
+      btn.onclick = () => {
+        [...container.children].forEach(child => child.className = "button unselected");
+        btn.className = "button selected";
+        selectedShipping = opt;
+        updateCalculations();
+      };
+      container.appendChild(btn);
+    });
+
+    document.getElementById("netto").addEventListener("input", updateCalculations);
+    document.getElementById("brutto").addEventListener("input", updateCalculations);
+    document.getElementById("prov1").addEventListener("input", updateCalculations);
+    document.getElementById("prov2").addEventListener("input", updateCalculations);
+    document.getElementById("adfee").addEventListener("input", updateCalculations);
+    document.getElementById("provLimit").addEventListener("input", updateCalculations);
+
+    function updateCalculations() {
+      const netto = parseFloat(document.getElementById("netto").value) || 0;
+      const brutto = parseFloat(document.getElementById("brutto").value) || 0;
+      const prov1 = parseFloat(document.getElementById("prov1").value) || 6.5;
+      const provLimit = parseFloat(document.getElementById("provLimit").value) || 400;
+      const prov2 = parseFloat(document.getElementById("prov2").value) || 2;
+      const adfeePercent = parseFloat(document.getElementById("adfee").value) || 0;
+
+      const versand = selectedShipping ? selectedShipping.price : 0;
+
+      let provision = 0;
+      if (selectedShipping && selectedShipping.name !== "Kein Versand") {
+        provision = (brutto <= provLimit 
+          ? brutto * (prov1 / 100) 
+          : provLimit * (prov1 / 100) + (brutto - provLimit) * (prov2 / 100)) + 0.35;
+      }
+
+      const nettoVK = brutto / 1.19;
+      const gewinn = nettoVK - netto - versand - provision;
+      const gewinnMitAnzeige = gewinn - (nettoVK * adfeePercent / 100);
+
+      const profitEl = document.getElementById("profit");
+      const profitAdsEl = document.getElementById("profit-ads");
+
+      profitEl.textContent = gewinn.toFixed(2);
+      profitAdsEl.textContent = gewinnMitAnzeige.toFixed(2);
+
+      profitEl.className = "result " + (gewinn >= 0 ? "positive" : "negative");
+      profitAdsEl.className = "result " + (gewinnMitAnzeige >= 0 ? "positive" : "negative");
+
+      document.getElementById("shipping-cost").textContent = versand.toFixed(2);
+      document.getElementById("commission").textContent = provision.toFixed(2);
+    }
+      const provisionCategories = [
+      { name: "Haushaltsgeräte", prov1: 6.5, prov2: 2, limit: 400 },
+      { name: "Haushaltsgeräte klein", prov1: 6.5, prov2: 2, limit: 400 },
+      { name: "Heimwerker", prov1: 12, prov2: 2, limit: 200 },
+      { name: "Garten & Terrasse", prov1: 12, prov2: 2, limit: 200 },
+      { name: "TV, Video & Audio", prov1: 6.5, prov2: 2, limit: 400 },
+      { name: "TV- & Heim-Audio-Zubehör", prov1: 11, prov2: 2, limit: 200 }
+    ];
+
+    const provContainer = document.getElementById("provision-buttons");
+    provisionCategories.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.textContent = cat.name;
+      btn.className = "button unselected";
+      btn.onclick = () => {
+        [...provContainer.children].forEach(child => child.className = "button unselected");
+        btn.className = "button selected";
+        document.getElementById("prov1").value = cat.prov1;
+        document.getElementById("prov2").value = cat.prov2;
+        document.getElementById("provLimit").value = cat.limit;
+        updateCalculations();
+      };
+      provContainer.appendChild(btn);
+    });
+  </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
