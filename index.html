@@ -4,18 +4,75 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#93c01f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Gebührenrechner" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiM5M2MwMWYiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xOS4xNCAzSDQuODZjLS45NSAwLTEuNzQuNzktMS43NCAxLjc0djE0LjUyYzAgLjk1Ljc5IDEuNzQgMS43NCAxLjc0aDE0LjI4Yy45NSAwIDEuNzQtLjc5IDEuNzQtMS43NFY0Ljc0Yy0uMDEtLjk1LS44LTEuNzQtMS43NC0xLjc0ek0xMiAxMi43NWgtNXYtMS41aDVWMTJjMCAuNDEuMzQuNzUuNzUuNzVzLjc1LS4zNC43NS0uNzV2LS43NWg1djEuNWgtNXYxLjVoNXYxLjVoLTV2Mi4yNWMwIC40MS0uMzQuNzUtLjc1Ljc1cy0uNzUtLjM0LS43NS0uNzVWMTRoLTV2LTEuMjV6bTcuNS0zLjI1aC01VjhoNVY2LjVjMC0uNDEuMzQtLjc1Ljc1LS43NXMuNzUuMzQuNzUuNzVWOGg1djEuNXoiLz4KPC9zdmc+Cjwvc3ZnPg==" />
   <title>Gebührenrechner</title>
-  <link rel="manifest" href="manifest.json">
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f9f9f9;
       padding: 20px;
       color: #333;
+      margin: 0;
     }
+    
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
     h1 {
       color: #93c01f;
+      margin: 0;
     }
+    
+    .update-banner {
+      background: #93c01f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .update-banner button {
+      background: white;
+      color: #93c01f;
+      border: none;
+      padding: 5px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .online-dot, .offline-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .online-dot {
+      background: #4CAF50;
+    }
+    
+    .offline-dot {
+      background: #FF9800;
+    }
+    
     .card {
       background: white;
       padding: 20px;
@@ -23,6 +80,7 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       margin-bottom: 20px;
     }
+    
     .button {
       padding: 10px;
       border: none;
@@ -30,20 +88,24 @@
       margin: 4px;
       cursor: pointer;
     }
+    
     .selected {
       background-color: #93c01f;
       color: white;
     }
+    
     .unselected {
       background-color: white;
       border: 1px solid #ccc;
       color: #333;
     }
+    
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 10px;
     }
+    
     .row {
       display: flex;
       align-items: center;
@@ -51,6 +113,7 @@
       flex-wrap: wrap;
       gap: 1rem;
     }
+    
     input[type="number"] {
       font-size: 2rem;
       padding: 0.6rem 1rem;
@@ -59,16 +122,20 @@
       border-radius: 12px;
       background-color: #fdfdfd;
     }
+    
     .result {
       font-size: 1.6rem;
       font-weight: bold;
     }
+    
     .positive {
       color: green;
     }
+    
     .negative {
       color: red;
     }
+    
     .shipping-input {
       font-size: 1rem;
       padding: 0.3rem 0.5rem;
@@ -77,6 +144,7 @@
       border-radius: 4px;
       margin-left: 5px;
     }
+    
     .shipping-row {
       display: flex;
       align-items: center;
@@ -85,10 +153,12 @@
       padding: 5px;
       border-bottom: 1px solid #eee;
     }
+    
     .shipping-name {
       font-weight: bold;
       min-width: 120px;
     }
+    
     .collapsible {
       cursor: pointer;
       padding: 15px 0;
@@ -102,28 +172,77 @@
       justify-content: space-between;
       width: 100%;
     }
+    
     .collapsible:hover {
       color: #7aa01a;
     }
+    
     .collapsible-arrow {
       transition: transform 0.3s ease;
       font-size: 1rem;
     }
+    
     .collapsible-arrow.open {
       transform: rotate(180deg);
     }
+    
     .content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease;
     }
+    
     .content.open {
       max-height: 1000px;
+    }
+    
+    .settings-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .action-button {
+      background: #93c01f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    .action-button:hover {
+      background: #7aa01a;
+    }
+    
+    .action-button.secondary {
+      background: #ccc;
+      color: #333;
+    }
+    
+    .action-button.secondary:hover {
+      background: #bbb;
     }
   </style>
 </head>
 <body>
-  <h1>Gebührenrechner</h1>
+  <div class="app-header">
+    <h1>Gebührenrechner</h1>
+    <div class="status-indicator">
+      <div id="connection-dot" class="online-dot"></div>
+      <span id="connection-status">Online</span>
+    </div>
+  </div>
+
+  <div class="update-banner" id="update-banner">
+    <span>App-Update verfügbar!</span>
+    <div>
+      <button onclick="dismissUpdate()">Später</button>
+      <button onclick="updateApp()">Jetzt aktualisieren</button>
+    </div>
+  </div>
 
   <div class="card">
     <div class="row">
@@ -162,11 +281,22 @@
       
       <h3>Versandtarife</h3>
       <div id="shipping-settings"></div>
+      
+      <div class="settings-actions">
+        <button class="action-button" onclick="exportSettings()">Einstellungen exportieren</button>
+        <button class="action-button secondary" onclick="importSettings()">Einstellungen importieren</button>
+        <button class="action-button secondary" onclick="resetSettings()">Zurücksetzen</button>
+      </div>
     </div>
   </div>
 
   <script>
-    let shippingOptions = [
+    // PWA Variables
+    let updateAvailable = false;
+    let deferredPrompt;
+    
+    // Default shipping options
+    const defaultShippingOptions = [
       { name: "Kein Versand", price: 0 },
       { name: "GEL HP", price: 55.85 },
       { name: "GEL 90", price: 79.56 },
@@ -185,7 +315,45 @@
       { name: "DHL Paket", price: 5.32 },
     ];
 
+    let shippingOptions = [];
     let selectedShipping = null;
+
+    // Load settings from storage or defaults
+    function loadSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('gebuehrenrechner-settings') || '{}');
+        
+        // Load shipping options
+        shippingOptions = saved.shippingOptions || [...defaultShippingOptions];
+        
+        // Load other settings
+        if (saved.prov1) document.getElementById("prov1").value = saved.prov1;
+        if (saved.prov2) document.getElementById("prov2").value = saved.prov2;
+        if (saved.provLimit) document.getElementById("provLimit").value = saved.provLimit;
+        if (saved.adfee) document.getElementById("adfee").value = saved.adfee;
+        
+      } catch (error) {
+        console.log('Using default settings');
+        shippingOptions = [...defaultShippingOptions];
+      }
+    }
+
+    // Save settings to storage
+    function saveSettings() {
+      try {
+        const settings = {
+          shippingOptions: shippingOptions,
+          prov1: document.getElementById("prov1").value,
+          prov2: document.getElementById("prov2").value,
+          provLimit: document.getElementById("provLimit").value,
+          adfee: document.getElementById("adfee").value,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem('gebuehrenrechner-settings', JSON.stringify(settings));
+      } catch (error) {
+        console.log('Could not save settings');
+      }
+    }
 
     function createShippingSettings() {
       const container = document.getElementById("shipping-settings");
@@ -207,6 +375,7 @@
         priceInput.addEventListener("input", () => {
           shippingOptions[index].price = parseFloat(priceInput.value) || 0;
           updateCalculations();
+          saveSettings();
         });
         
         const euroSpan = document.createElement("span");
@@ -237,12 +406,31 @@
       });
     }
 
-    document.getElementById("netto").addEventListener("input", updateCalculations);
-    document.getElementById("brutto").addEventListener("input", updateCalculations);
-    document.getElementById("prov1").addEventListener("input", updateCalculations);
-    document.getElementById("prov2").addEventListener("input", updateCalculations);
-    document.getElementById("adfee").addEventListener("input", updateCalculations);
-    document.getElementById("provLimit").addEventListener("input", updateCalculations);
+    // Event listeners for calculations
+    document.getElementById("netto").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
+    document.getElementById("brutto").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
+    document.getElementById("prov1").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
+    document.getElementById("prov2").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
+    document.getElementById("adfee").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
+    document.getElementById("provLimit").addEventListener("input", () => {
+      updateCalculations();
+      saveSettings();
+    });
 
     function updateCalculations() {
       const netto = parseFloat(document.getElementById("netto").value) || 0;
@@ -271,8 +459,8 @@
       profitEl.textContent = gewinn.toFixed(2);
       profitAdsEl.textContent = gewinnMitAnzeige.toFixed(2);
 
-      profitEl.className = "result " + (gewinn >= 0 ? "positive" : "negative");
-      profitAdsEl.className = "result " + (gewinnMitAnzeige >= 0 ? "positive" : "negative");
+      profitEl.className = gewinn >= 0 ? "positive" : "negative";
+      profitAdsEl.className = gewinnMitAnzeige >= 0 ? "positive" : "negative";
 
       document.getElementById("shipping-cost").textContent = versand.toFixed(2);
       document.getElementById("commission").textContent = provision.toFixed(2);
@@ -299,13 +487,10 @@
         document.getElementById("prov2").value = cat.prov2;
         document.getElementById("provLimit").value = cat.limit;
         updateCalculations();
+        saveSettings();
       };
       provContainer.appendChild(btn);
     });
-
-    // Initialize
-    createShippingButtons();
-    createShippingSettings();
 
     function toggleSettings() {
       const content = document.getElementById("settings-content");
@@ -319,15 +504,188 @@
         arrow.classList.add("open");
       }
     }
-  </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.error('Service Worker registration failed:', err));
+
+    // Settings management
+    function exportSettings() {
+      const settings = {
+        shippingOptions: shippingOptions,
+        prov1: document.getElementById("prov1").value,
+        prov2: document.getElementById("prov2").value,
+        provLimit: document.getElementById("provLimit").value,
+        adfee: document.getElementById("adfee").value,
+        exportDate: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gebuehrenrechner-settings.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importSettings() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const settings = JSON.parse(e.target.result);
+              
+              if (settings.shippingOptions) {
+                shippingOptions = settings.shippingOptions;
+                createShippingButtons();
+                createShippingSettings();
+              }
+              
+              if (settings.prov1) document.getElementById("prov1").value = settings.prov1;
+              if (settings.prov2) document.getElementById("prov2").value = settings.prov2;
+              if (settings.provLimit) document.getElementById("provLimit").value = settings.provLimit;
+              if (settings.adfee) document.getElementById("adfee").value = settings.adfee;
+              
+              saveSettings();
+              updateCalculations();
+              alert('Einstellungen erfolgreich importiert!');
+            } catch (error) {
+              alert('Fehler beim Importieren der Einstellungen!');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    }
+
+    function resetSettings() {
+      if (confirm('Alle Einstellungen auf Standard zurücksetzen?')) {
+        shippingOptions = [...defaultShippingOptions];
+        document.getElementById("prov1").value = 6.5;
+        document.getElementById("prov2").value = 2;
+        document.getElementById("provLimit").value = 400;
+        document.getElementById("adfee").value = 2;
+        
+        createShippingButtons();
+        createShippingSettings();
+        saveSettings();
+        updateCalculations();
+      }
+    }
+
+    // PWA Functions
+    function updateConnectionStatus() {
+      const dot = document.getElementById('connection-dot');
+      const status = document.getElementById('connection-status');
+      
+      if (navigator.onLine) {
+        dot.className = 'online-dot';
+        status.textContent = 'Online';
+      } else {
+        dot.className = 'offline-dot';
+        status.textContent = 'Offline';
+      }
+    }
+
+    function updateApp() {
+      if (updateAvailable) {
+        window.location.reload();
+      }
+    }
+
+    function dismissUpdate() {
+      document.getElementById('update-banner').style.display = 'none';
+    }
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(createServiceWorker())
+          .then(reg => {
+            console.log('Service Worker registered:', reg);
+            
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  updateAvailable = true;
+                  document.getElementById('update-banner').style.display = 'flex';
+                }
+              });
+            });
+          })
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+
+    // Create Service Worker as Blob URL
+    function createServiceWorker() {
+      const swCode = `
+        const CACHE_NAME = 'gebuehrenrechner-v1.0.0';
+        const urlsToCache = [
+          './',
+          './index.html'
+        ];
+
+        self.addEventListener('install', event => {
+          event.waitUntil(
+            caches.open(CACHE_NAME)
+              .then(cache => cache.addAll(urlsToCache))
+              .then(() => self.skipWaiting())
+          );
+        });
+
+        self.addEventListener('activate', event => {
+          event.waitUntil(
+            caches.keys().then(cacheNames => {
+              return Promise.all(
+                cacheNames.map(cacheName => {
+                  if (cacheName !== CACHE_NAME) {
+                    return caches.delete(cacheName);
+                  }
+                })
+              );
+            }).then(() => self.clients.claim())
+          );
+        });
+
+        self.addEventListener('fetch', event => {
+          event.respondWith(
+            caches.match(event.request)
+              .then(response => {
+                // Cache first strategy
+                if (response) {
+                  return response;
+                }
+                return fetch(event.request);
+              })
+          );
+        });
+      `;
+      
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      return URL.createObjectURL(blob);
+    }
+
+    // Event listeners
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+
+    // Install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
     });
-  }
-</script>
+
+    // Initialize app
+    loadSettings();
+    createShippingButtons();
+    createShippingSettings();
+    updateConnectionStatus();
+    updateCalculations();
+  </script>
 </body>
 </html>
